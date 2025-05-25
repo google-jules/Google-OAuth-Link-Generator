@@ -4,7 +4,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google OAuth Link Generator</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 800px; /* Added max-width for better layout on wider screens */
+    margin: auto; /* Center container */
+}
+
+h1, h2 {
+    color: #333;
+    text-align: center; /* Center main heading */
+}
+
+h2 {
+    margin-top: 30px; /* Add more space above subheadings */
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.input-group input[type="text"] {
+    width: 100%;
+    padding: 10px; /* Increased padding */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.parameter-options-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Spacing between buttons */
+    margin-bottom: 10px;
+    padding: 5px;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+}
+
+.option-button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    color: #333;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s, border-color 0.2s; /* Smooth transition */
+}
+
+.option-button.selected {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+.option-button:hover:not(.selected) {
+    background-color: #e2e2e2;
+    border-color: #bbb;
+}
+
+
+#scopes-container {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 300px; /* Adjusted height */
+    overflow-y: auto;
+}
+
+.scope-category {
+    margin-bottom: 15px;
+}
+
+.scope-category h3 {
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.scope-button {
+    background-color: #e7e7e7;
+    border: 1px solid #ccc;
+    color: #333;
+    padding: 5px 10px;
+    margin: 5px 5px 5px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s, border-color 0.2s; /* Smooth transition */
+}
+
+.scope-button.selected {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #45a049;
+}
+
+.scope-button:hover:not(.selected) {
+    background-color: #dadada;
+    border-color: #bbb;
+}
+
+textarea#oauth_link {
+    width: 100%;
+    padding: 10px; /* Increased padding */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    font-family: monospace;
+    min-height: 100px; /* Ensure it's a bit taller */
+}
+
+button#copy_button {
+    background-color: #28a745; /* Green color for copy */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    display: block; /* Make it block to center it or control width better */
+    margin: 10px auto 0; /* Center button */
+}
+
+button#copy_button:hover {
+    background-color: #218838;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .container {
+        margin: 10px;
+        padding: 15px;
+    }
+    .option-button, .scope-button {
+        font-size: 0.85em;
+        padding: 6px 10px;
+    }
+}
+    </style>
 </head>
 <body>
     <div class="container">
@@ -22,12 +183,12 @@
 
         <div class="input-group">
             <label for="response_type">Response Type:</label>
-            <input type="text" id="response_type" name="response_type" value="code">
+            <div id="response_type_options" class="parameter-options-group"></div>
         </div>
 
         <div class="input-group">
             <label for="access_type">Access Type:</label>
-            <input type="text" id="access_type" name="access_type" value="offline">
+            <div id="access_type_options" class="parameter-options-group"></div>
         </div>
 
         <div class="input-group">
@@ -47,7 +208,7 @@
 
         <div class="input-group">
             <label for="prompt">Prompt (none/consent/select_account, Optional):</label>
-            <input type="text" id="prompt" name="prompt" value="consent">
+            <div id="prompt_options" class="parameter-options-group"></div>
         </div>
 
         <h2>Select Scopes:</h2>
@@ -60,6 +221,237 @@
         <button id="copy_button">Copy Link</button>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+// Ensure this is all placed within the <script> tags at the end of the body
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Element References
+    const clientIdInput = document.getElementById('client_id');
+    const redirectUriInput = document.getElementById('redirect_uri');
+    // Note: response_type, access_type, prompt inputs are now divs
+    const responseTypeOptionsContainer = document.getElementById('response_type_options');
+    const accessTypeOptionsContainer = document.getElementById('access_type_options');
+    const promptOptionsContainer = document.getElementById('prompt_options');
+    const stateInput = document.getElementById('state');
+    const includeGrantedScopesInput = document.getElementById('include_granted_scopes');
+    const loginHintInput = document.getElementById('login_hint');
+    const scopesContainer = document.getElementById('scopes-container');
+    const oauthLinkTextarea = document.getElementById('oauth_link');
+    const copyButton = document.getElementById('copy_button');
+
+    // --- Data for Scopes and Parameters ---
+    const scopeData = {
+        "User Information": {
+            "View your email address": "email",
+            "View your basic profile info": "profile",
+            "OpenID Connect": "openid"
+        },
+        "Gmail API": {
+            "Read, compose, send, and permanently delete all your email from Gmail": "https://www.googleapis.com/auth/gmail.modify",
+            "View your email messages and settings": "https://www.googleapis.com/auth/gmail.readonly",
+            "Manage drafts and send emails": "https://www.googleapis.com/auth/gmail.compose"
+        },
+        "Google Drive API": {
+            "See, edit, create, and delete all of your Google Drive files": "https://www.googleapis.com/auth/drive",
+            "View and manage metadata of files in your Google Drive": "https://www.googleapis.com/auth/drive.metadata"
+        },
+        "Google Calendar API": {
+            "See, edit, share, and permanently delete all the calendars you can access": "https://www.googleapis.com/auth/calendar",
+            "View events on all your calendars": "https://www.googleapis.com/auth/calendar.events"
+        },
+        "Google Cloud - Storage": {
+            "Manage your data and permissions in Google Cloud Storage": "https://www.googleapis.com/auth/devstorage.full_control",
+            "View your data in Google Cloud Storage": "https://www.googleapis.com/auth/devstorage.read_only"
+        }
+    };
+
+    const parameterOptions = {
+        response_type: {
+            options: ['code', 'token', 'id_token', 'code token', 'code id_token', 'token id_token', 'code token id_token', 'none'],
+            default: 'code',
+            multiple: false // Typically, response_type is a single selection or specific combinations
+        },
+        access_type: {
+            options: ['offline', 'online'],
+            default: 'offline',
+            multiple: false
+        },
+        prompt: {
+            options: ['none', 'consent', 'select_account'],
+            default: 'consent',
+            multiple: false // Prompt can sometimes have multiple, space-separated, but for buttons, single is simpler.
+                           // User can still use the text field for 'login_hint' if more complex prompt needed.
+        }
+    };
+
+    // --- UI Generation Functions ---
+
+    function generateScopeUI() {
+        for (const category in scopeData) {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.classList.add('scope-category');
+            const categoryTitle = document.createElement('h3');
+            categoryTitle.textContent = category;
+            categoryDiv.appendChild(categoryTitle);
+
+            for (const description in scopeData[category]) {
+                const scope = scopeData[category][description];
+                const button = document.createElement('button');
+                button.classList.add('scope-button');
+                button.textContent = description;
+                button.dataset.scope = scope;
+                categoryDiv.appendChild(button);
+            }
+            scopesContainer.appendChild(categoryDiv);
+        }
+    }
+
+    function generateParameterOptionButtons(paramName, container, optionsConfig) {
+        if (!container) return;
+        optionsConfig.options.forEach(optionValue => {
+            const button = document.createElement('button');
+            button.classList.add('option-button');
+            button.textContent = optionValue;
+            button.dataset.value = optionValue;
+            if (optionValue === optionsConfig.default) {
+                button.classList.add('selected');
+            }
+            button.addEventListener('click', () => {
+                if (!optionsConfig.multiple) {
+                    // Deselect siblings
+                    container.querySelectorAll('.option-button.selected').forEach(sel => sel.classList.remove('selected'));
+                }
+                button.classList.toggle('selected'); // Toggle current, or re-select if it was the only one
+                if (!optionsConfig.multiple && !container.querySelector('.option-button.selected')) {
+                    button.classList.add('selected'); // Ensure at least one is selected if not multiple
+                }
+                generateOAuthLink();
+            });
+            container.appendChild(button);
+        });
+    }
+
+    // --- OAuth Link Generation ---
+
+    function getSelectedOption(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return '';
+        const selectedButton = container.querySelector('.option-button.selected');
+        return selectedButton ? selectedButton.dataset.value : '';
+    }
+    
+    function getSelectedOptions(containerId) { // For potential multi-select params
+        const container = document.getElementById(containerId);
+        if (!container) return [];
+        const selectedButtons = container.querySelectorAll('.option-button.selected');
+        return Array.from(selectedButtons).map(b => b.dataset.value);
+    }
+
+
+    function generateOAuthLink() {
+        const clientId = clientIdInput.value.trim();
+        const redirectUri = redirectUriInput.value.trim();
+
+        if (!clientId || !redirectUri) {
+            oauthLinkTextarea.value = "Client ID and Redirect URI are required.";
+            return;
+        }
+
+        const responseType = getSelectedOption('response_type_options');
+        const accessType = getSelectedOption('access_type_options');
+        const promptValue = getSelectedOption('prompt_options'); // For prompt, multiple values are space separated.
+                                                                  // Our button implementation is single-select for simplicity.
+
+        const state = stateInput.value.trim();
+        const includeGrantedScopes = includeGrantedScopesInput.value.trim();
+        const loginHint = loginHintInput.value.trim();
+
+        let selectedScopes = [];
+        document.querySelectorAll('#scopes-container .scope-button.selected').forEach(button => {
+            selectedScopes.push(button.dataset.scope);
+        });
+
+        let link = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}`;
+        link += `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+        
+        if (responseType) {
+            link += `&response_type=${encodeURIComponent(responseType)}`;
+        }
+
+        if (selectedScopes.length > 0) {
+            link += `&scope=${encodeURIComponent(selectedScopes.join(' '))}`;
+        }
+
+        if (accessType) {
+            link += `&access_type=${encodeURIComponent(accessType)}`;
+        }
+        if (state) {
+            link += `&state=${encodeURIComponent(state)}`;
+        }
+        if (includeGrantedScopes) { // Should be 'true' or 'false'
+            link += `&include_granted_scopes=${encodeURIComponent(includeGrantedScopes)}`;
+        }
+        if (loginHint) {
+            link += `&login_hint=${encodeURIComponent(loginHint)}`;
+        }
+        if (promptValue) {
+            link += `&prompt=${encodeURIComponent(promptValue)}`;
+        }
+
+        oauthLinkTextarea.value = link;
+    }
+
+    // --- Event Listeners Setup ---
+
+    // Text inputs
+    const textInputs = [
+        clientIdInput, redirectUriInput, stateInput,
+        includeGrantedScopesInput, loginHintInput
+    ];
+    textInputs.forEach(input => {
+        if (input) input.addEventListener('input', generateOAuthLink);
+    });
+
+    // Scope buttons (attach after generation)
+    // This needs to be done after generateScopeUI() is called.
+    // We'll call generateScopeUI and then attach these.
+
+    // Copy button
+    if (copyButton) {
+        copyButton.addEventListener('click', () => {
+            oauthLinkTextarea.select();
+            try {
+                document.execCommand('copy');
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 1500);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy link. Please copy it manually.');
+            }
+        });
+    }
+
+    // --- Initial Page Setup ---
+    generateScopeUI(); // Populate scopes
+    // Attach event listeners to dynamically generated scope buttons
+    document.querySelectorAll('#scopes-container .scope-button').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle('selected');
+            generateOAuthLink();
+        });
+    });
+
+    // Generate parameter option buttons
+    generateParameterOptionButtons('response_type', responseTypeOptionsContainer, parameterOptions.response_type);
+    generateParameterOptionButtons('access_type', accessTypeOptionsContainer, parameterOptions.access_type);
+    generateParameterOptionButtons('prompt', promptOptionsContainer, parameterOptions.prompt);
+    // Add more calls here if other parameters are converted to button options
+
+    generateOAuthLink(); // Initial link generation
+});
+    </script>
 </body>
 </html>
