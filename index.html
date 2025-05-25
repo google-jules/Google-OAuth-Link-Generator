@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Link Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Google OAuth Link Generator</h1>
+
+        <div class="input-group">
+            <label for="client_id">Client ID:</label>
+            <input type="text" id="client_id" name="client_id">
+        </div>
+
+        <div class="input-group">
+            <label for="redirect_uri">Redirect URI:</label>
+            <input type="text" id="redirect_uri" name="redirect_uri">
+        </div>
+
+        <div class="input-group">
+            <label for="response_type">Response Type:</label>
+            <input type="text" id="response_type" name="response_type" value="code">
+        </div>
+
+        <div class="input-group">
+            <label for="access_type">Access Type:</label>
+            <input type="text" id="access_type" name="access_type" value="offline">
+        </div>
+
+        <div class="input-group">
+            <label for="state">State (Optional):</label>
+            <input type="text" id="state" name="state">
+        </div>
+
+        <div class="input-group">
+            <label for="include_granted_scopes">Include Granted Scopes (true/false, Optional):</label>
+            <input type="text" id="include_granted_scopes" name="include_granted_scopes" value="true">
+        </div>
+
+        <div class="input-group">
+            <label for="login_hint">Login Hint (Email or sub, Optional):</label>
+            <input type="text" id="login_hint" name="login_hint">
+        </div>
+
+        <div class="input-group">
+            <label for="prompt">Prompt (none/consent/select_account, Optional):</label>
+            <input type="text" id="prompt" name="prompt" value="consent">
+        </div>
+
+        <h2>Select Scopes:</h2>
+        <div id="scopes-container">
+            <!-- Scopes will be dynamically inserted here by JavaScript -->
+        </div>
+
+        <h2>Generated OAuth Link:</h2>
+        <textarea id="oauth_link" rows="5" readonly></textarea>
+        <button id="copy_button">Copy Link</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
